@@ -6,6 +6,7 @@ WORKDIR /build
 COPY pom.xml .
 COPY mvnw mvnw.cmd ./
 COPY .mvn .mvn
+RUN chmod +x mvnw
 
 # Descarregar dependências (camada separada — raramente muda)
 RUN ./mvnw dependency:go-offline --no-transfer-progress -q
