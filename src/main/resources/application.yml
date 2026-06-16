@@ -1,0 +1,66 @@
+spring:
+  application:
+    name: angogas-backend
+
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/angogas}
+    username: ${DB_USER:angogas}
+    password: ${DB_PASSWORD:angogas123}
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: none
+    show-sql: false
+    open-in-view: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+        jdbc:
+          time_zone: UTC
+
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      timeout: 2000ms
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+    validate-on-migrate: false
+
+server:
+  port: 8080
+  error:
+    include-message: never
+    include-stacktrace: never
+    include-binding-errors: never
+
+jwt:
+  secret: ${JWT_SECRET:5A7134743777217A25432A462D4A614E645267556B5870327335753878214125}
+  access-expiration: ${JWT_ACCESS_EXPIRY:900}
+  refresh-expiration: ${JWT_REFRESH_EXPIRY:2592000}
+
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operationsSorter: method
+  info:
+    title: AngoGÁS API
+    description: API de entrega de botijões de gás porta a porta — Angola
+    version: 1.0.0
+
+fcm:
+  enabled: ${FCM_ENABLED:false}
+  service-account-path: ${FIREBASE_SERVICE_ACCOUNT:}
+
+logging:
+  level:
+    root: INFO
+    ao.angogas: DEBUG
+    org.hibernate.SQL: WARN
