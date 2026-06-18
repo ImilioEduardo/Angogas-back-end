@@ -45,6 +45,8 @@ services:
       REDIS_HOST: redis
       REDIS_PORT: 6379
       JWT_SECRET: ${JWT_SECRET}
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-https://angogas-front-end.vercel.app,http://localhost:3000}
       FCM_ENABLED: ${FCM_ENABLED:-false}
     ports:
       - "8080:8080"
