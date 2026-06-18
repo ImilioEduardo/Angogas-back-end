@@ -1,15 +1,16 @@
 -- ============================================================
--- AngoGÁS — Schema Fase 2: Entregador, Rastreio, Notificações, Avaliações
+-- AngoGÁS — Schema Fase 2 (consolidação idempotente)
+-- Tabelas já criadas em V2; esta migração garante índices e zonas adicionais.
 -- ============================================================
 
-CREATE TABLE zones (
+CREATE TABLE IF NOT EXISTS zones (
     id        UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
     nome      VARCHAR(100) NOT NULL,
     municipio VARCHAR(100) NOT NULL,
     activa    BOOLEAN     NOT NULL DEFAULT true
 );
 
-CREATE TABLE delivery_agents (
+CREATE TABLE IF NOT EXISTS delivery_agents (
     id              UUID           PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id         UUID           NOT NULL UNIQUE REFERENCES users(id),
     veiculo         VARCHAR(50),
@@ -21,7 +22,7 @@ CREATE TABLE delivery_agents (
     criado_em       TIMESTAMPTZ    NOT NULL DEFAULT now()
 );
 
-CREATE TABLE order_tracking (
+CREATE TABLE IF NOT EXISTS order_tracking (
     id           BIGSERIAL      PRIMARY KEY,
     order_id     UUID           NOT NULL REFERENCES orders(id),
     agent_id     UUID           NOT NULL REFERENCES users(id),
@@ -30,7 +31,7 @@ CREATE TABLE order_tracking (
     registado_em TIMESTAMPTZ    NOT NULL DEFAULT now()
 );
 
-CREATE TABLE notifications (
+CREATE TABLE IF NOT EXISTS notifications (
     id        UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id   UUID        NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     titulo    VARCHAR(100) NOT NULL,
@@ -40,7 +41,7 @@ CREATE TABLE notifications (
     criado_em TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
-CREATE TABLE reviews (
+CREATE TABLE IF NOT EXISTS reviews (
     id          UUID      PRIMARY KEY DEFAULT gen_random_uuid(),
     order_id    UUID      NOT NULL UNIQUE REFERENCES orders(id),
     cliente_id  UUID      NOT NULL REFERENCES users(id),
@@ -50,21 +51,24 @@ CREATE TABLE reviews (
     criado_em   TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
--- Índices
-CREATE INDEX idx_delivery_agents_user_id  ON delivery_agents(user_id);
-CREATE INDEX idx_delivery_agents_zone_id  ON delivery_agents(zone_id);
-CREATE INDEX idx_order_tracking_order_id  ON order_tracking(order_id);
-CREATE INDEX idx_order_tracking_agent_id  ON order_tracking(agent_id);
-CREATE INDEX idx_notifications_user_id    ON notifications(user_id);
-CREATE INDEX idx_notifications_lida       ON notifications(lida);
-CREATE INDEX idx_reviews_order_id         ON reviews(order_id);
-CREATE INDEX idx_reviews_agent_id         ON reviews(agent_id);
+-- Índices (idempotentes)
+CREATE INDEX IF NOT EXISTS idx_delivery_agents_user_id  ON delivery_agents(user_id);
+CREATE INDEX IF NOT EXISTS idx_delivery_agents_zone_id  ON delivery_agents(zone_id);
+CREATE INDEX IF NOT EXISTS idx_order_tracking_order_id  ON order_tracking(order_id);
+CREATE INDEX IF NOT EXISTS idx_order_tracking_agent_id  ON order_tracking(agent_id);
+CREATE INDEX IF NOT EXISTS idx_notifications_user_id    ON notifications(user_id);
+CREATE INDEX IF NOT EXISTS idx_notifications_lida       ON notifications(lida);
+CREATE INDEX IF NOT EXISTS idx_reviews_order_id         ON reviews(order_id);
+CREATE INDEX IF NOT EXISTS idx_reviews_agent_id         ON reviews(agent_id);
 
--- Zonas iniciais de Luanda
-INSERT INTO zones (nome, municipio) VALUES
+-- Zonas iniciais de Luanda (apenas se a tabela estava vazia)
+INSERT INTO zones (nome, municipio)
+SELECT * FROM (VALUES
     ('Talatona Norte', 'Talatona'),
     ('Talatona Sul',   'Talatona'),
     ('Maianga Centro', 'Maianga'),
     ('Ingombota',      'Ingombota'),
     ('Rangel',         'Rangel'),
-    ('Samba',          'Samba');
+    ('Samba',          'Samba')
+) AS v(nome, municipio)
+WHERE NOT EXISTS (SELECT 1 FROM zones LIMIT 1);

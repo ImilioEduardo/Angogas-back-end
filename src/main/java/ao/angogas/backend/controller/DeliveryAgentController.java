@@ -41,6 +41,17 @@ public class DeliveryAgentController {
         return ResponseEntity.ok(ApiResponse.ok(deliveryAgentService.listMyOrders(currentUser, pageable)));
     }
 
+    @GetMapping("/available-orders")
+    @PreAuthorize("hasRole('ENTREGADOR')")
+    @Operation(summary = "Listar pedidos disponíveis na minha zona")
+    public ResponseEntity<ApiResponse<?>> listAvailableOrders(
+            @AuthenticationPrincipal User currentUser,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        var pageable = PageRequest.of(page, size, Sort.by("criadoEm").descending());
+        return ResponseEntity.ok(ApiResponse.ok(deliveryAgentService.listAvailableOrders(currentUser, pageable)));
+    }
+
     @PutMapping("/orders/{orderId}/status")
     @PreAuthorize("hasRole('ENTREGADOR')")
     @Operation(summary = "Actualizar status de entrega")

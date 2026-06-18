@@ -17,6 +17,9 @@ public class CreateOrderRequest {
     @NotNull(message = "Endereço de entrega é obrigatório")
     private UUID addressId;
 
+    @NotNull(message = "Zona de entrega é obrigatória")
+    private UUID zoneId;
+
     @NotNull(message = "Método de pagamento é obrigatório")
     private PaymentMethod metodoPagamento;
 

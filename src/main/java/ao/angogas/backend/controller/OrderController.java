@@ -63,6 +63,27 @@ public class OrderController {
         return ResponseEntity.ok(ApiResponse.ok(null, "Pedido cancelado"));
     }
 
+    // --- Entregador ---
+
+    @PostMapping("/{id}/accept")
+    @PreAuthorize("hasRole('ENTREGADOR')")
+    @Operation(summary = "[Entregador] Aceitar pedido")
+    public ResponseEntity<ApiResponse<?>> accept(
+            @AuthenticationPrincipal User currentUser,
+            @PathVariable UUID id) {
+        return ResponseEntity.ok(ApiResponse.ok(orderService.accept(id, currentUser), "Pedido aceite"));
+    }
+
+    @PostMapping("/{id}/reject")
+    @PreAuthorize("hasRole('ENTREGADOR')")
+    @Operation(summary = "[Entregador] Recusar pedido")
+    public ResponseEntity<ApiResponse<?>> reject(
+            @AuthenticationPrincipal User currentUser,
+            @PathVariable UUID id) {
+        orderService.reject(id, currentUser);
+        return ResponseEntity.ok(ApiResponse.ok(null, "Pedido recusado"));
+    }
+
     // --- Admin ---
 
     @GetMapping("/admin")

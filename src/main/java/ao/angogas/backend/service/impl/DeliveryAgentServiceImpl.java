@@ -74,6 +74,26 @@ public class DeliveryAgentServiceImpl implements DeliveryAgentService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public PageResponse<OrderResponse> listAvailableOrders(User user, Pageable pageable) {
+        DeliveryAgent agent = deliveryAgentRepository.findByUserId(user.getId())
+                .orElseThrow(() -> new ResourceNotFoundException("Perfil de entregador não encontrado"));
+
+        if (agent.getZone() == null) {
+            return PageResponse.from(org.springframework.data.domain.Page.empty(pageable));
+        }
+
+        Page<UUID> idPage = orderRepository.findIdsByStatusAndZoneId(
+                OrderStatus.AGUARDANDO_ACEITACAO, agent.getZone().getId(), pageable);
+        List<Order> orders = orderRepository.findAllWithAssociationsByIdIn(idPage.getContent());
+
+        return PageResponse.from(new org.springframework.data.domain.PageImpl<>(
+                orders.stream().map(orderMapper::toResponse).toList(),
+                pageable,
+                idPage.getTotalElements()));
+    }
+
+    @Override
     @Transactional
     public OrderResponse updateDeliveryStatus(UUID orderId, UpdateDeliveryStatusRequest request, User user) {
         Order order = orderRepository.findById(orderId)

@@ -33,4 +33,7 @@ public interface OrderRepository extends JpaRepository<Order, UUID> {
 
     @Query("SELECT o.id FROM Order o WHERE o.status = :status")
     Page<UUID> findIdsByStatus(@Param("status") OrderStatus status, Pageable pageable);
+
+    @Query("SELECT o.id FROM Order o WHERE o.status = :status AND o.zone.id = :zoneId")
+    Page<UUID> findIdsByStatusAndZoneId(@Param("status") OrderStatus status, @Param("zoneId") UUID zoneId, Pageable pageable);
 }

@@ -16,6 +16,7 @@ import java.util.UUID;
 
 public interface DeliveryAgentService {
     PageResponse<OrderResponse> listMyOrders(User user, Pageable pageable);
+    PageResponse<OrderResponse> listAvailableOrders(User user, Pageable pageable);
     OrderResponse updateDeliveryStatus(UUID orderId, UpdateDeliveryStatusRequest request, User user);
     OrderTrackingResponse updateLocation(UUID orderId, UpdateLocationRequest request, User user);
     DeliveryAgentResponse getMyProfile(User user);

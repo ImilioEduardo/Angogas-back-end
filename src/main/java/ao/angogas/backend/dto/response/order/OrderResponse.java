@@ -17,9 +17,12 @@ public class OrderResponse {
     private UUID id;
     private UUID clienteId;
     private String clienteNome;
+    private String clienteTelefone;
     private UUID entregadorId;
     private String entregadorNome;
     private AddressResponse address;
+    private UUID zoneId;
+    private String zoneNome;
     private OrderStatus status;
     private PaymentMethod metodoPagamento;
     private BigDecimal totalKz;

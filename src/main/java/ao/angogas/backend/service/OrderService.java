@@ -16,4 +16,6 @@ public interface OrderService {
     PageResponse<OrderResponse> listAll(String status, Pageable pageable);
     OrderResponse updateStatus(UUID id, UpdateOrderStatusRequest request);
     void cancel(UUID id, User currentUser);
+    OrderResponse accept(UUID id, User entregador);
+    void reject(UUID id, User entregador);
 }

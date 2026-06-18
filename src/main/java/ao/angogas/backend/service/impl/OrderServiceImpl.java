@@ -10,12 +10,11 @@ import ao.angogas.backend.exception.ResourceNotFoundException;
 import ao.angogas.backend.exception.UnauthorizedException;
 import ao.angogas.backend.mapper.OrderMapper;
 import ao.angogas.backend.model.*;
+import ao.angogas.backend.model.enums.NotificationType;
 import ao.angogas.backend.model.enums.OrderStatus;
 import ao.angogas.backend.model.enums.UserRole;
-import ao.angogas.backend.repository.AddressRepository;
-import ao.angogas.backend.repository.OrderRepository;
-import ao.angogas.backend.repository.ProductRepository;
-import ao.angogas.backend.repository.UserRepository;
+import ao.angogas.backend.repository.*;
+import ao.angogas.backend.service.NotificationService;
 import ao.angogas.backend.service.OrderService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -36,6 +35,9 @@ public class OrderServiceImpl implements OrderService {
     private final ProductRepository productRepository;
     private final AddressRepository addressRepository;
     private final UserRepository userRepository;
+    private final ZoneRepository zoneRepository;
+    private final DeliveryAgentRepository deliveryAgentRepository;
+    private final NotificationService notificationService;
     private final OrderMapper orderMapper;
 
     @Override
@@ -43,6 +45,13 @@ public class OrderServiceImpl implements OrderService {
     public OrderResponse create(CreateOrderRequest request, User currentUser) {
         Address address = addressRepository.findByIdAndUserId(request.getAddressId(), currentUser.getId())
                 .orElseThrow(() -> new ResourceNotFoundException("Endereço não encontrado"));
+
+        Zone zone = zoneRepository.findById(request.getZoneId())
+                .orElseThrow(() -> new ResourceNotFoundException("Zona não encontrada"));
+
+        if (!zone.isActiva()) {
+            throw new BusinessException("Zona de entrega inactiva");
+        }
 
         List<OrderItem> items = new ArrayList<>();
         BigDecimal total = BigDecimal.ZERO;
@@ -75,16 +84,34 @@ public class OrderServiceImpl implements OrderService {
         Order order = Order.builder()
                 .cliente(currentUser)
                 .address(address)
+                .zone(zone)
                 .metodoPagamento(request.getMetodoPagamento())
                 .totalKz(total)
                 .notas(request.getNotas())
-                .status(OrderStatus.PENDENTE)
+                .status(OrderStatus.AGUARDANDO_ACEITACAO)
                 .build();
 
         items.forEach(item -> item.setOrder(order));
         order.getItems().addAll(items);
 
-        return orderMapper.toResponse(orderRepository.save(order));
+        Order saved = orderRepository.save(order);
+
+        notifyAgentsInZone(zone, saved);
+
+        return orderMapper.toResponse(saved);
+    }
+
+    private void notifyAgentsInZone(Zone zone, Order order) {
+        List<DeliveryAgent> agents = deliveryAgentRepository.findByZoneIdAndDisponivelTrue(zone.getId());
+        for (DeliveryAgent agent : agents) {
+            notificationService.send(
+                    agent.getUser().getId(),
+                    "Novo pedido na tua zona",
+                    "Pedido #" + order.getId().toString().substring(0, 8).toUpperCase()
+                            + " em " + zone.getNome() + ". Aceita ou recusa.",
+                    NotificationType.PEDIDO
+            );
+        }
     }
 
     @Override
@@ -169,15 +196,16 @@ public class OrderServiceImpl implements OrderService {
             throw new UnauthorizedException("Acesso negado");
         }
 
-        if (order.getStatus() != OrderStatus.PENDENTE && !isAdmin) {
-            throw new BusinessException("Só é possível cancelar pedidos no estado PENDENTE");
+        if (order.getStatus() != OrderStatus.PENDENTE
+                && order.getStatus() != OrderStatus.AGUARDANDO_ACEITACAO
+                && !isAdmin) {
+            throw new BusinessException("Só é possível cancelar pedidos no estado PENDENTE ou AGUARDANDO_ACEITACAO");
         }
 
         if (order.getStatus() == OrderStatus.ENTREGUE) {
             throw new BusinessException("Pedido já entregue — não pode ser cancelado");
         }
 
-        // Devolve stock
         order.getItems().forEach(item -> {
             Product product = item.getProduct();
             product.setStock(product.getStock() + item.getQuantidade());
@@ -186,5 +214,41 @@ public class OrderServiceImpl implements OrderService {
 
         order.setStatus(OrderStatus.CANCELADO);
         orderRepository.save(order);
+    }
+
+    @Override
+    @Transactional
+    public OrderResponse accept(UUID id, User entregador) {
+        Order order = orderRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Pedido não encontrado"));
+
+        if (order.getStatus() != OrderStatus.AGUARDANDO_ACEITACAO) {
+            throw new BusinessException("Este pedido já foi aceite ou não está disponível");
+        }
+
+        order.setEntregador(entregador);
+        order.setStatus(OrderStatus.CONFIRMADO);
+        Order saved = orderRepository.save(order);
+
+        notificationService.send(
+                order.getCliente().getId(),
+                "Pedido aceite!",
+                "O teu pedido #" + id.toString().substring(0, 8).toUpperCase()
+                        + " foi aceite por " + entregador.getNome() + " e está a ser preparado.",
+                NotificationType.ENTREGA
+        );
+
+        return orderMapper.toResponse(saved);
+    }
+
+    @Override
+    @Transactional
+    public void reject(UUID id, User entregador) {
+        Order order = orderRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Pedido não encontrado"));
+
+        if (order.getStatus() != OrderStatus.AGUARDANDO_ACEITACAO) {
+            throw new BusinessException("Este pedido já não está disponível para recusa");
+        }
     }
 }

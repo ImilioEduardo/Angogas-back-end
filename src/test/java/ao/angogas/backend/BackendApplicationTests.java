@@ -1,10 +1,12 @@
 package ao.angogas.backend;
 
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
+import org.springframework.test.context.ActiveProfiles;
 
-@SpringBootTest
-class BackendApplicationTests {
+@Import(TestcontainersConfiguration.class)
+@ActiveProfiles("test")
+class BackendApplicationTests extends AbstractIntegrationTest {
 
 	@Test
 	void contextLoads() {

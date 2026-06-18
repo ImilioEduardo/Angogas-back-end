@@ -12,9 +12,12 @@ public interface OrderMapper {
 
     @Mapping(target = "clienteId", source = "cliente.id")
     @Mapping(target = "clienteNome", source = "cliente.nome")
+    @Mapping(target = "clienteTelefone", source = "cliente.telefone")
     @Mapping(target = "entregadorId", source = "entregador.id")
     @Mapping(target = "entregadorNome", source = "entregador.nome")
     @Mapping(target = "address", source = "address")
+    @Mapping(target = "zoneId", source = "zone.id")
+    @Mapping(target = "zoneNome", source = "zone.nome")
     OrderResponse toResponse(Order order);
 
     @Mapping(target = "productId", source = "product.id")
