@@ -24,7 +24,7 @@ class OrderFlowIntegrationTest extends AbstractIntegrationTest {
         productId = createProduct(adminToken, "Botijão 13kg", 5000.0, 50);
 
         String phone = uniquePhone();
-        register("Cliente Teste", phone, "Senha@123");
+        register("Cliente Teste", phone);
         clientToken = doLogin(phone, "Senha@123");
 
         addressId = createAddress(clientToken, "Talatona");
@@ -107,7 +107,7 @@ class OrderFlowIntegrationTest extends AbstractIntegrationTest {
         String orderId = (String) order.get("id");
 
         String otherPhone = uniquePhone();
-        register("Outro", otherPhone, "Senha@123");
+        register("Outro", otherPhone);
         String otherToken = doLogin(otherPhone, "Senha@123");
 
         ResponseEntity<Map> res = restTemplate().exchange(
@@ -160,7 +160,7 @@ class OrderFlowIntegrationTest extends AbstractIntegrationTest {
         String orderId = (String) order.get("id");
 
         String otherPhone = uniquePhone();
-        register("Outro", otherPhone, "Senha@123");
+        register("Outro", otherPhone);
         String otherToken = doLogin(otherPhone, "Senha@123");
 
         ResponseEntity<Map> res = restTemplate().exchange(

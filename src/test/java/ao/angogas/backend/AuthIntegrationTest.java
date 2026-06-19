@@ -121,7 +121,7 @@ class AuthIntegrationTest extends AbstractIntegrationTest {
     @Test
     void protectedEndpoint_withValidToken_returns200() {
         String phone = uniquePhone();
-        register("Auth User", phone, "Senha@123");
+        register("Auth User", phone);
         String token = doLogin(phone, "Senha@123");
 
         ResponseEntity<Map> res = restTemplate().exchange(

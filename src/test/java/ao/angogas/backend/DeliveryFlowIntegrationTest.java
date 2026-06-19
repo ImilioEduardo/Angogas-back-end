@@ -24,7 +24,7 @@ class DeliveryFlowIntegrationTest extends AbstractIntegrationTest {
         productId = createProduct(adminToken, "Botijão 13kg Delivery", 5000.0, 100);
 
         String clientPhone = uniquePhone();
-        register("Cliente Entrega", clientPhone, "Senha@123");
+        register("Cliente Entrega", clientPhone);
         clientToken = doLogin(clientPhone, "Senha@123");
         addressId = createAddress(clientToken, "Maianga");
 
