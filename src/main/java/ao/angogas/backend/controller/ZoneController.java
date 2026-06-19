@@ -33,4 +33,11 @@ public class ZoneController {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.ok(zoneService.create(request), "Zona criada"));
     }
+
+    @PatchMapping("/{id}/toggle")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "[Admin] Activar/desactivar zona")
+    public ResponseEntity<ApiResponse<?>> toggle(@PathVariable java.util.UUID id) {
+        return ResponseEntity.ok(ApiResponse.ok(zoneService.toggleActive(id), "Estado da zona actualizado"));
+    }
 }

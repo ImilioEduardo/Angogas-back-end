@@ -27,4 +27,7 @@ public class Zone {
     @Column(nullable = false)
     @Builder.Default
     private boolean activa = true;
+
+    @Column(columnDefinition = "TEXT")
+    private String coordenadas;
 }

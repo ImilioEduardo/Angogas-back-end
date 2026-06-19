@@ -8,4 +8,5 @@ import java.util.List;
 public interface ZoneService {
     List<ZoneResponse> listActive();
     ZoneResponse create(CreateZoneRequest request);
+    ZoneResponse toggleActive(java.util.UUID id);
 }

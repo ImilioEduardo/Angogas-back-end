@@ -2,16 +2,14 @@
 -- AngoGÁS — Schema Fase 2: Entregadores, Tracking, Notificações
 -- ============================================================
 
--- Zonas de entrega
-CREATE TABLE zones (
+CREATE TABLE IF NOT EXISTS zones (
     id          UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
     nome        VARCHAR(100) NOT NULL,
     municipio   VARCHAR(100) NOT NULL,
     activa      BOOLEAN     NOT NULL DEFAULT true
 );
 
--- Perfis de entregador
-CREATE TABLE delivery_agents (
+CREATE TABLE IF NOT EXISTS delivery_agents (
     id              UUID            PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id         UUID            NOT NULL UNIQUE REFERENCES users(id) ON DELETE CASCADE,
     veiculo         VARCHAR(50),
@@ -23,8 +21,7 @@ CREATE TABLE delivery_agents (
     criado_em       TIMESTAMPTZ     NOT NULL DEFAULT now()
 );
 
--- Rastreio de localização em tempo real
-CREATE TABLE order_tracking (
+CREATE TABLE IF NOT EXISTS order_tracking (
     id          BIGSERIAL   PRIMARY KEY,
     order_id    UUID        NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
     agent_id    UUID        NOT NULL REFERENCES users(id),
@@ -33,8 +30,7 @@ CREATE TABLE order_tracking (
     registado_em TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
--- Notificações in-app
-CREATE TABLE notifications (
+CREATE TABLE IF NOT EXISTS notifications (
     id          UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id     UUID        NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     titulo      VARCHAR(100) NOT NULL,
@@ -44,8 +40,7 @@ CREATE TABLE notifications (
     criado_em   TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
--- Avaliações de entrega
-CREATE TABLE reviews (
+CREATE TABLE IF NOT EXISTS reviews (
     id          UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
     order_id    UUID        NOT NULL UNIQUE REFERENCES orders(id),
     cliente_id  UUID        NOT NULL REFERENCES users(id),
@@ -55,12 +50,9 @@ CREATE TABLE reviews (
     criado_em   TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
--- ============================================================
--- Índices
--- ============================================================
-CREATE INDEX idx_delivery_agents_user_id   ON delivery_agents(user_id);
-CREATE INDEX idx_delivery_agents_zone_id   ON delivery_agents(zone_id);
-CREATE INDEX idx_order_tracking_order_id   ON order_tracking(order_id);
-CREATE INDEX idx_notifications_user_id     ON notifications(user_id);
-CREATE INDEX idx_notifications_lida        ON notifications(user_id, lida);
-CREATE INDEX idx_reviews_agent_id          ON reviews(agent_id);
+CREATE INDEX IF NOT EXISTS idx_delivery_agents_user_id   ON delivery_agents(user_id);
+CREATE INDEX IF NOT EXISTS idx_delivery_agents_zone_id   ON delivery_agents(zone_id);
+CREATE INDEX IF NOT EXISTS idx_order_tracking_order_id   ON order_tracking(order_id);
+CREATE INDEX IF NOT EXISTS idx_notifications_user_id     ON notifications(user_id);
+CREATE INDEX IF NOT EXISTS idx_notifications_lida        ON notifications(user_id, lida);
+CREATE INDEX IF NOT EXISTS idx_reviews_agent_id          ON reviews(agent_id);

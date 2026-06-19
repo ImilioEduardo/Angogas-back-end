@@ -12,6 +12,7 @@ import org.springframework.web.client.NoOpResponseErrorHandler;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -42,8 +43,9 @@ public abstract class AbstractIntegrationTest {
 
     protected String doLogin(String emailOrPhone, String password) {
         var body = Map.of("emailOrTelefone", emailOrPhone, "password", password);
-        ResponseEntity<Map> res = restTemplate().postForEntity(base() + "/api/v1/auth/login", body, Map.class);
         @SuppressWarnings("unchecked")
+        ResponseEntity<Map<String, Object>> res = restTemplate().postForEntity(
+                base() + "/api/v1/auth/login", body, (Class<Map<String, Object>>) (Class<?>) Map.class);
         Map<String, Object> responseBody = res.getBody();
         if (responseBody == null) {
             throw new IllegalStateException("Login returned null body for: " + emailOrPhone + " (HTTP " + res.getStatusCode() + ")");
@@ -56,8 +58,8 @@ public abstract class AbstractIntegrationTest {
         return (String) data.get("accessToken");
     }
 
-    protected void register(String nome, String telefone, String password) {
-        var reg = Map.of("nome", nome, "telefone", telefone, "password", password);
+    protected void register(String nome, String telefone) {
+        var reg = Map.of("nome", nome, "telefone", telefone, "password", "Senha@123");
         restTemplate().postForEntity(base() + "/api/v1/auth/register", reg, Map.class);
     }
 
@@ -75,30 +77,42 @@ public abstract class AbstractIntegrationTest {
     // ── Setup helpers ─────────────────────────────────────────────────────────
 
     protected String createZone(String adminToken, String nome) {
-        var body = Map.of("nome", nome, "municipio", "Luanda");
-        ResponseEntity<Map> res = restTemplate().exchange(
-                base() + "/api/v1/zones", HttpMethod.POST, request(body, adminToken), Map.class);
+        var coords = java.util.List.of(
+                Map.of("lat", -8.805, "lng", 13.213),
+                Map.of("lat", -8.805, "lng", 13.255),
+                Map.of("lat", -8.842, "lng", 13.255),
+                Map.of("lat", -8.842, "lng", 13.213)
+        );
+        var body = Map.of("nome", nome, "municipio", "Luanda", "coordenadas", coords);
         @SuppressWarnings("unchecked")
-        Map<String, Object> data = (Map<String, Object>) res.getBody().get("data");
-        return (String) data.get("id");
+        ResponseEntity<Map<String, Object>> res = restTemplate().exchange(
+                base() + "/api/v1/zones", HttpMethod.POST, request(body, adminToken),
+                (Class<Map<String, Object>>) (Class<?>) Map.class);
+        @SuppressWarnings("unchecked")
+        Map<String, Object> data = (Map<String, Object>) Objects.requireNonNull(res.getBody(), "createZone: null body").get("data");
+        return (String) Objects.requireNonNull(data, "createZone: null data").get("id");
     }
 
     protected String createProduct(String adminToken, String nome, double preco, int stock) {
         var body = Map.of("nome", nome, "precoKz", preco, "pesoKg", 13.0, "stock", stock);
-        ResponseEntity<Map> res = restTemplate().exchange(
-                base() + "/api/v1/products", HttpMethod.POST, request(body, adminToken), Map.class);
         @SuppressWarnings("unchecked")
-        Map<String, Object> data = (Map<String, Object>) res.getBody().get("data");
-        return (String) data.get("id");
+        ResponseEntity<Map<String, Object>> res = restTemplate().exchange(
+                base() + "/api/v1/products", HttpMethod.POST, request(body, adminToken),
+                (Class<Map<String, Object>>) (Class<?>) Map.class);
+        @SuppressWarnings("unchecked")
+        Map<String, Object> data = (Map<String, Object>) Objects.requireNonNull(res.getBody(), "createProduct: null body").get("data");
+        return (String) Objects.requireNonNull(data, "createProduct: null data").get("id");
     }
 
     protected String createAddress(String clientToken, String bairro) {
         var body = Map.of("bairro", bairro, "municipio", "Luanda");
-        ResponseEntity<Map> res = restTemplate().exchange(
-                base() + "/api/v1/addresses", HttpMethod.POST, request(body, clientToken), Map.class);
         @SuppressWarnings("unchecked")
-        Map<String, Object> data = (Map<String, Object>) res.getBody().get("data");
-        return (String) data.get("id");
+        ResponseEntity<Map<String, Object>> res = restTemplate().exchange(
+                base() + "/api/v1/addresses", HttpMethod.POST, request(body, clientToken),
+                (Class<Map<String, Object>>) (Class<?>) Map.class);
+        @SuppressWarnings("unchecked")
+        Map<String, Object> data = (Map<String, Object>) Objects.requireNonNull(res.getBody(), "createAddress: null body").get("data");
+        return (String) Objects.requireNonNull(data, "createAddress: null data").get("id");
     }
 
     @SuppressWarnings("unchecked")
@@ -110,9 +124,10 @@ public abstract class AbstractIntegrationTest {
                 "metodoPagamento", "DINHEIRO",
                 "items", java.util.List.of(Map.of("productId", productId, "quantidade", qty))
         );
-        ResponseEntity<Map> res = restTemplate().exchange(
-                base() + "/api/v1/orders", HttpMethod.POST, request(body, clientToken), Map.class);
-        return (Map<String, Object>) res.getBody().get("data");
+        ResponseEntity<Map<String, Object>> res = restTemplate().exchange(
+                base() + "/api/v1/orders", HttpMethod.POST, request(body, clientToken),
+                (Class<Map<String, Object>>) (Class<?>) Map.class);
+        return (Map<String, Object>) Objects.requireNonNull(res.getBody(), "createOrder: null body").get("data");
     }
 
     @SuppressWarnings("unchecked")
@@ -129,10 +144,11 @@ public abstract class AbstractIntegrationTest {
                 "registoCriminal", true,
                 "temSmartphone", true
         );
-        ResponseEntity<Map> res = restTemplate().exchange(
-                base() + "/api/v1/delivery/admin/agents", HttpMethod.POST, request(body, adminToken), Map.class);
-        Map<String, Object> agentData = (Map<String, Object>) res.getBody().get("data");
-        String agentId = (String) agentData.get("id");
+        ResponseEntity<Map<String, Object>> res = restTemplate().exchange(
+                base() + "/api/v1/delivery/admin/agents", HttpMethod.POST, request(body, adminToken),
+                (Class<Map<String, Object>>) (Class<?>) Map.class);
+        Map<String, Object> agentData = (Map<String, Object>) Objects.requireNonNull(res.getBody(), "createAgent: null body").get("data");
+        String agentId = (String) Objects.requireNonNull(agentData, "createAgent: null agentData").get("id");
 
         // Assign zone
         restTemplate().exchange(base() + "/api/v1/delivery/admin/agents/" + agentId + "/zone",
