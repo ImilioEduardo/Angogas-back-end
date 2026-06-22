@@ -36,6 +36,10 @@ public class DeliveryAgent {
     @JoinColumn(name = "zone_id")
     private Zone zone;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "agency_id")
+    private Agency agency;
+
     // Documentação pessoal
     @Column(name = "data_nascimento")
     private LocalDate dataNascimento;

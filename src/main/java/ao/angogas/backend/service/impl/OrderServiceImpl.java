@@ -14,8 +14,10 @@ import ao.angogas.backend.model.enums.NotificationType;
 import ao.angogas.backend.model.enums.OrderStatus;
 import ao.angogas.backend.model.enums.UserRole;
 import ao.angogas.backend.repository.*;
+import ao.angogas.backend.service.LoyaltyPointService;
 import ao.angogas.backend.service.NotificationService;
 import ao.angogas.backend.service.OrderService;
+import ao.angogas.backend.service.PricingService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -23,6 +25,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -31,6 +34,8 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class OrderServiceImpl implements OrderService {
 
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
+
     private final OrderRepository orderRepository;
     private final ProductRepository productRepository;
     private final AddressRepository addressRepository;
@@ -38,6 +43,9 @@ public class OrderServiceImpl implements OrderService {
     private final ZoneRepository zoneRepository;
     private final DeliveryAgentRepository deliveryAgentRepository;
     private final NotificationService notificationService;
+    private final PricingService pricingService;
+    private final LoyaltyPointService loyaltyPointService;
+    private final LoyaltyPointRepository loyaltyPointRepository;
     private final OrderMapper orderMapper;
 
     @Override
@@ -81,14 +89,26 @@ public class OrderServiceImpl implements OrderService {
                     .build());
         }
 
+        BigDecimal descontoPontos = BigDecimal.ZERO;
+        if (request.isUsarPontos()) {
+            Integer saldo = loyaltyPointRepository.sumPontosByUserId(currentUser.getId());
+            int pts = (saldo != null && saldo > 0) ? saldo : 0;
+            if (pts > 0) {
+                descontoPontos = BigDecimal.valueOf(Math.min(pts, total.intValue()));
+                total = total.subtract(descontoPontos);
+            }
+        }
+
         Order order = Order.builder()
                 .cliente(currentUser)
                 .address(address)
                 .zone(zone)
                 .metodoPagamento(request.getMetodoPagamento())
                 .totalKz(total)
+                .descontoPontos(descontoPontos)
                 .notas(request.getNotas())
                 .status(OrderStatus.AGUARDANDO_ACEITACAO)
+                .codigoEntrega(generateDeliveryCode())
                 .build();
 
         items.forEach(item -> item.setOrder(order));
@@ -96,9 +116,26 @@ public class OrderServiceImpl implements OrderService {
 
         Order saved = orderRepository.save(order);
 
+        if (descontoPontos.compareTo(BigDecimal.ZERO) > 0) {
+            loyaltyPointService.addPoints(
+                    currentUser.getId(),
+                    -descontoPontos.intValue(),
+                    "Desconto no pedido #" + saved.getId().toString().substring(0, 8).toUpperCase(),
+                    saved.getId()
+            );
+        }
+
         notifyAgentsInZone(zone, saved);
 
         return orderMapper.toResponse(saved);
+    }
+
+    private String generateDeliveryCode() {
+        StringBuilder sb = new StringBuilder(12);
+        for (int i = 0; i < 12; i++) {
+            sb.append(SECURE_RANDOM.nextInt(10));
+        }
+        return sb.toString();
     }
 
     private void notifyAgentsInZone(Zone zone, Order order) {
@@ -180,7 +217,13 @@ public class OrderServiceImpl implements OrderService {
             order.setEntregador(entregador);
         }
 
-        return orderMapper.toResponse(orderRepository.save(order));
+        Order saved = orderRepository.save(order);
+
+        if (request.getStatus() == OrderStatus.ENTREGUE) {
+            pricingService.recordDeliveryFinancials(saved);
+        }
+
+        return orderMapper.toResponse(saved);
     }
 
     @Override

@@ -37,6 +37,8 @@ public class DeliveryAgentResponse {
     // Operacional
     private UUID zoneId;
     private String zoneName;
+    private UUID agencyId;
+    private String agencyName;
     private boolean disponivel;
     private boolean activo;
     private BigDecimal avaliacaoMedia;

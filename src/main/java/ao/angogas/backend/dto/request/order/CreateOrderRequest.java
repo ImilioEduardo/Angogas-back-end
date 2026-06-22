@@ -28,4 +28,6 @@ public class CreateOrderRequest {
     private List<CreateOrderItemRequest> items;
 
     private String notas;
+
+    private boolean usarPontos;
 }

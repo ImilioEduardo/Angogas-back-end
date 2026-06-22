@@ -92,16 +92,24 @@ class DeliveryFlowIntegrationTest extends AbstractIntegrationTest {
     void statusFlow_confirmedToEntregue_allStepsSucceed() {
         Map<String, Object> order = createOrder(clientToken, addressId, zoneId, productId, 1);
         String orderId = (String) order.get("id");
+        String codigoEntrega = (String) order.get("codigoEntrega");
 
         restTemplate().exchange(base() + "/api/v1/orders/" + orderId + "/accept",
                 HttpMethod.POST, request(null, agentToken), Map.class);
 
-        for (String status : new String[]{"A_PREPARAR", "A_CAMINHO", "ENTREGUE"}) {
+        for (String status : new String[]{"A_PREPARAR", "A_CAMINHO"}) {
             ResponseEntity<Map> res = restTemplate().exchange(
                     base() + "/api/v1/delivery/orders/" + orderId + "/status",
                     HttpMethod.PUT, request(Map.of("status", status), agentToken), Map.class);
             assertThat(res.getStatusCode()).isEqualTo(HttpStatus.OK);
         }
+
+        ResponseEntity<Map> entregueRes = restTemplate().exchange(
+                base() + "/api/v1/delivery/orders/" + orderId + "/status",
+                HttpMethod.PUT,
+                request(Map.of("status", "ENTREGUE", "codigoEntrega", codigoEntrega), agentToken),
+                Map.class);
+        assertThat(entregueRes.getStatusCode()).isEqualTo(HttpStatus.OK);
 
         ResponseEntity<Map> final$ = restTemplate().exchange(
                 base() + "/api/v1/orders/" + orderId,

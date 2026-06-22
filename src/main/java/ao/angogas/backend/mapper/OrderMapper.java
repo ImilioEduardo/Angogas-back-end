@@ -18,6 +18,7 @@ public interface OrderMapper {
     @Mapping(target = "address", source = "address")
     @Mapping(target = "zoneId", source = "zone.id")
     @Mapping(target = "zoneNome", source = "zone.nome")
+    @Mapping(target = "codigoEntrega", source = "codigoEntrega")
     OrderResponse toResponse(Order order);
 
     @Mapping(target = "productId", source = "product.id")

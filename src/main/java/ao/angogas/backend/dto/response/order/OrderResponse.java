@@ -26,6 +26,8 @@ public class OrderResponse {
     private OrderStatus status;
     private PaymentMethod metodoPagamento;
     private BigDecimal totalKz;
+    private BigDecimal descontoPontos;
+    private String codigoEntrega;
     private String notas;
     private List<OrderItemResponse> items;
     private OffsetDateTime criadoEm;

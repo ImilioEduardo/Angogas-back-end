@@ -1,5 +1,6 @@
 package ao.angogas.backend.service;
 
+import ao.angogas.backend.dto.request.delivery.AssignAgencyRequest;
 import ao.angogas.backend.dto.request.delivery.AssignZoneRequest;
 import ao.angogas.backend.dto.request.delivery.CreateDeliveryAgentRequest;
 import ao.angogas.backend.dto.request.delivery.UpdateDeliveryAgentRequest;
@@ -12,6 +13,7 @@ import ao.angogas.backend.dto.response.order.OrderResponse;
 import ao.angogas.backend.model.User;
 import org.springframework.data.domain.Pageable;
 
+import java.util.List;
 import java.util.UUID;
 
 public interface DeliveryAgentService {
@@ -25,5 +27,8 @@ public interface DeliveryAgentService {
     DeliveryAgentResponse updateAgent(UUID agentId, UpdateDeliveryAgentRequest request);
     PageResponse<DeliveryAgentResponse> listAll(Pageable pageable);
     DeliveryAgentResponse assignZone(UUID agentId, AssignZoneRequest request);
+    DeliveryAgentResponse assignAgency(UUID agentId, AssignAgencyRequest request);
     OrderTrackingResponse getLastLocation(UUID orderId);
+    List<OrderTrackingResponse> getTrackingHistory(UUID orderId, User currentUser);
+    DeliveryAgentResponse getAgentPublicProfile(UUID userId);
 }

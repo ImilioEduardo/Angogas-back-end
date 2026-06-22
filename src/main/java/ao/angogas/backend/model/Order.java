@@ -54,6 +54,13 @@ public class Order {
     @Column(name = "total_kz", nullable = false, precision = 12, scale = 2)
     private BigDecimal totalKz;
 
+    @Column(name = "codigo_entrega", length = 12)
+    private String codigoEntrega;
+
+    @Column(name = "desconto_pontos", nullable = false, precision = 12, scale = 2)
+    @Builder.Default
+    private BigDecimal descontoPontos = BigDecimal.ZERO;
+
     @Column(columnDefinition = "TEXT")
     private String notas;
 

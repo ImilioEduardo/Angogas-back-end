@@ -1,5 +1,6 @@
 package ao.angogas.backend.service.impl;
 
+import ao.angogas.backend.dto.request.delivery.AssignAgencyRequest;
 import ao.angogas.backend.dto.request.delivery.AssignZoneRequest;
 import ao.angogas.backend.dto.request.delivery.CreateDeliveryAgentRequest;
 import ao.angogas.backend.dto.request.delivery.UpdateDeliveryAgentRequest;
@@ -13,6 +14,7 @@ import ao.angogas.backend.exception.BusinessException;
 import ao.angogas.backend.exception.ResourceNotFoundException;
 import ao.angogas.backend.exception.UnauthorizedException;
 import ao.angogas.backend.mapper.OrderMapper;
+import ao.angogas.backend.model.Agency;
 import ao.angogas.backend.model.DeliveryAgent;
 import ao.angogas.backend.model.Order;
 import ao.angogas.backend.model.OrderTracking;
@@ -21,13 +23,16 @@ import ao.angogas.backend.model.Zone;
 import ao.angogas.backend.model.enums.NotificationType;
 import ao.angogas.backend.model.enums.OrderStatus;
 import ao.angogas.backend.model.enums.UserRole;
+import ao.angogas.backend.repository.AgencyRepository;
 import ao.angogas.backend.repository.DeliveryAgentRepository;
 import ao.angogas.backend.repository.OrderRepository;
 import ao.angogas.backend.repository.OrderTrackingRepository;
 import ao.angogas.backend.repository.UserRepository;
 import ao.angogas.backend.repository.ZoneRepository;
 import ao.angogas.backend.service.DeliveryAgentService;
+import ao.angogas.backend.service.LoyaltyPointService;
 import ao.angogas.backend.service.NotificationService;
+import ao.angogas.backend.service.PricingService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -55,10 +60,13 @@ public class DeliveryAgentServiceImpl implements DeliveryAgentService {
     private final DeliveryAgentRepository deliveryAgentRepository;
     private final OrderRepository orderRepository;
     private final OrderTrackingRepository trackingRepository;
+    private final AgencyRepository agencyRepository;
     private final ZoneRepository zoneRepository;
     private final UserRepository userRepository;
     private final OrderMapper orderMapper;
     private final NotificationService notificationService;
+    private final PricingService pricingService;
+    private final LoyaltyPointService loyaltyPointService;
     private final SimpMessagingTemplate messagingTemplate;
     private final PasswordEncoder passwordEncoder;
 
@@ -110,8 +118,30 @@ public class DeliveryAgentServiceImpl implements DeliveryAgentService {
             throw new BusinessException("Transição de status inválida: " + order.getStatus() + " → " + request.getStatus());
         }
 
+        if (request.getStatus() == OrderStatus.ENTREGUE) {
+            if (request.getCodigoEntrega() == null || request.getCodigoEntrega().isBlank()) {
+                throw new BusinessException("Código de entrega obrigatório para confirmar a entrega");
+            }
+            if (!request.getCodigoEntrega().equals(order.getCodigoEntrega())) {
+                throw new BusinessException("Código de entrega inválido");
+            }
+        }
+
         order.setStatus(request.getStatus());
         Order saved = orderRepository.save(order);
+
+        if (request.getStatus() == OrderStatus.ENTREGUE) {
+            pricingService.recordDeliveryFinancials(saved);
+            int pontos = saved.getTotalKz().multiply(java.math.BigDecimal.valueOf(0.03)).intValue();
+            if (pontos > 0) {
+                loyaltyPointService.addPoints(
+                        saved.getCliente().getId(),
+                        pontos,
+                        "Pedido #" + saved.getId().toString().substring(0, 8).toUpperCase() + " entregue",
+                        saved.getId()
+                );
+            }
+        }
 
         notificationService.send(
                 order.getCliente().getId(),
@@ -273,6 +303,17 @@ public class DeliveryAgentServiceImpl implements DeliveryAgentService {
     }
 
     @Override
+    @Transactional
+    public DeliveryAgentResponse assignAgency(UUID agentId, AssignAgencyRequest request) {
+        DeliveryAgent agent = deliveryAgentRepository.findById(agentId)
+                .orElseThrow(() -> new ResourceNotFoundException("Entregador não encontrado"));
+        Agency agency = agencyRepository.findById(request.getAgencyId())
+                .orElseThrow(() -> new ResourceNotFoundException("Agência não encontrada"));
+        agent.setAgency(agency);
+        return toResponse(deliveryAgentRepository.save(agent));
+    }
+
+    @Override
     public OrderTrackingResponse getLastLocation(UUID orderId) {
         return trackingRepository.findTopByOrderIdOrderByRegistadoEmDesc(orderId)
                 .map(t -> OrderTrackingResponse.builder()
@@ -282,6 +323,50 @@ public class DeliveryAgentServiceImpl implements DeliveryAgentService {
                         .registadoEm(t.getRegistadoEm())
                         .build())
                 .orElseThrow(() -> new ResourceNotFoundException("Localização não disponível para este pedido"));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<OrderTrackingResponse> getTrackingHistory(UUID orderId, User currentUser) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new ResourceNotFoundException("Pedido não encontrado"));
+
+        boolean isCliente = order.getCliente().getId().equals(currentUser.getId());
+        boolean isEntregador = order.getEntregador() != null
+                && order.getEntregador().getId().equals(currentUser.getId());
+        boolean isAdmin = currentUser.getRole() == UserRole.ADMIN;
+
+        if (!isCliente && !isEntregador && !isAdmin) {
+            throw new UnauthorizedException("Sem acesso ao histórico deste pedido");
+        }
+
+        return trackingRepository.findByOrderIdOrderByRegistadoEmAsc(orderId)
+                .stream()
+                .map(t -> OrderTrackingResponse.builder()
+                        .orderId(orderId)
+                        .latitude(t.getLatitude())
+                        .longitude(t.getLongitude())
+                        .registadoEm(t.getRegistadoEm())
+                        .build())
+                .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public DeliveryAgentResponse getAgentPublicProfile(UUID userId) {
+        DeliveryAgent agent = deliveryAgentRepository.findByUserId(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("Entregador não encontrado"));
+
+        return DeliveryAgentResponse.builder()
+                .id(agent.getId())
+                .userId(agent.getUser().getId())
+                .nome(agent.getUser().getNome())
+                .telefone(agent.getUser().getTelefone())
+                .veiculo(agent.getVeiculo())
+                .matricula(agent.getMatricula())
+                .avaliacaoMedia(agent.getAvaliacaoMedia())
+                .totalEntregas(agent.getTotalEntregas())
+                .build();
     }
 
     private DeliveryAgentResponse toResponse(DeliveryAgent agent) {
@@ -304,6 +389,8 @@ public class DeliveryAgentServiceImpl implements DeliveryAgentService {
                 .temSmartphone(agent.isTemSmartphone())
                 .zoneId(agent.getZone() != null ? agent.getZone().getId() : null)
                 .zoneName(agent.getZone() != null ? agent.getZone().getNome() : null)
+                .agencyId(agent.getAgency() != null ? agent.getAgency().getId() : null)
+                .agencyName(agent.getAgency() != null ? agent.getAgency().getNome() : null)
                 .disponivel(agent.isDisponivel())
                 .activo(agent.getUser().isActivo())
                 .avaliacaoMedia(agent.getAvaliacaoMedia())

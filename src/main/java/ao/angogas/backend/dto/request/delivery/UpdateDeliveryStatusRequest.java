@@ -8,4 +8,6 @@ import lombok.Data;
 public class UpdateDeliveryStatusRequest {
     @NotNull(message = "Status é obrigatório")
     private OrderStatus status;
+
+    private String codigoEntrega;
 }

@@ -1,5 +1,6 @@
 package ao.angogas.backend.controller;
 
+import ao.angogas.backend.dto.request.delivery.AssignAgencyRequest;
 import ao.angogas.backend.dto.request.delivery.AssignZoneRequest;
 import ao.angogas.backend.dto.request.delivery.CreateDeliveryAgentRequest;
 import ao.angogas.backend.dto.request.delivery.UpdateDeliveryAgentRequest;
@@ -89,6 +90,12 @@ public class DeliveryAgentController {
         return ResponseEntity.ok(ApiResponse.ok(deliveryAgentService.toggleDisponivel(currentUser)));
     }
 
+    @GetMapping("/agents/{userId}/public")
+    @Operation(summary = "Perfil público de um entregador (nome, veículo, avaliação)")
+    public ResponseEntity<ApiResponse<?>> getAgentPublicProfile(@PathVariable UUID userId) {
+        return ResponseEntity.ok(ApiResponse.ok(deliveryAgentService.getAgentPublicProfile(userId)));
+    }
+
     // --- Admin ---
 
     @PostMapping("/admin/agents")
@@ -127,5 +134,15 @@ public class DeliveryAgentController {
             @Valid @RequestBody AssignZoneRequest request) {
         return ResponseEntity.ok(ApiResponse.ok(
                 deliveryAgentService.assignZone(agentId, request), "Zona atribuída"));
+    }
+
+    @PutMapping("/admin/agents/{agentId}/agency")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "[Admin] Atribuir agência a entregador")
+    public ResponseEntity<ApiResponse<?>> assignAgency(
+            @PathVariable UUID agentId,
+            @Valid @RequestBody AssignAgencyRequest request) {
+        return ResponseEntity.ok(ApiResponse.ok(
+                deliveryAgentService.assignAgency(agentId, request), "Agência atribuída"));
     }
 }
