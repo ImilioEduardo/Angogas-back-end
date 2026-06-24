@@ -24,8 +24,7 @@ public class CreateOrderRequest {
     private PaymentMethod metodoPagamento;
 
     @NotEmpty(message = "O pedido deve ter pelo menos um produto")
-    @Valid
-    private List<CreateOrderItemRequest> items;
+    private List<@Valid CreateOrderItemRequest> items;
 
     private String notas;
 

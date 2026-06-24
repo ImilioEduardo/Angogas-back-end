@@ -47,6 +47,13 @@ public class User implements UserDetails {
     @Builder.Default
     private boolean activo = true;
 
+    @Column(name = "email_verificado", nullable = false)
+    @Builder.Default
+    private boolean emailVerificado = false;
+
+    @Column(name = "foto_perfil", length = 500)
+    private String fotoPerfil;
+
     @CreationTimestamp
     @Column(name = "criado_em", updatable = false)
     private OffsetDateTime criadoEm;

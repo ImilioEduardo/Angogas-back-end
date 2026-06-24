@@ -16,5 +16,7 @@ public class UserResponse {
     private String telefone;
     private UserRole role;
     private boolean activo;
+    private boolean emailVerificado;
+    private String fotoPerfil;
     private OffsetDateTime criadoEm;
 }

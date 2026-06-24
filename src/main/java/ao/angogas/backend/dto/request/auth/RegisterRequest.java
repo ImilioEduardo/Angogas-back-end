@@ -23,4 +23,7 @@ public class RegisterRequest {
     @NotBlank(message = "Password é obrigatória")
     @Size(min = 6, message = "Password deve ter pelo menos 6 caracteres")
     private String password;
+
+    @Size(max = 500)
+    private String fotoPerfil;
 }

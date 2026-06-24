@@ -14,6 +14,7 @@ import ao.angogas.backend.repository.RefreshTokenRepository;
 import ao.angogas.backend.repository.UserRepository;
 import ao.angogas.backend.security.JwtService;
 import ao.angogas.backend.service.AuthService;
+import ao.angogas.backend.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -32,6 +33,7 @@ public class AuthServiceImpl implements AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final UserMapper userMapper;
+    private final UserService userService;
 
     @Value("${jwt.access-expiration}")
     private long accessExpiration;
@@ -58,9 +60,15 @@ public class AuthServiceImpl implements AuthService {
                 .telefone(request.getTelefone())
                 .passwordHash(passwordEncoder.encode(request.getPassword()))
                 .role(UserRole.CLIENTE)
+                .fotoPerfil(request.getFotoPerfil())
                 .build();
 
         user = userRepository.save(user);
+
+        if (user.getEmail() != null) {
+            userService.triggerVerificationEmail(user.getId());
+        }
+
         return buildAuthResponse(user);
     }
 

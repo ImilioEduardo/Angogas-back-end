@@ -13,5 +13,9 @@ public interface NotificationService {
     long countUnread(User user);
     void markRead(UUID id, User user);
     void markAllRead(User user);
-    void send(UUID userId, String titulo, String mensagem, NotificationType tipo);
+    void send(UUID userId, String titulo, String mensagem, NotificationType tipo, UUID entityId, String route);
+
+    default void send(UUID userId, String titulo, String mensagem, NotificationType tipo) {
+        send(userId, titulo, mensagem, tipo, null, null);
+    }
 }

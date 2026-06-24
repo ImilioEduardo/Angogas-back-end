@@ -15,4 +15,5 @@ public interface ProductService {
     PageResponse<ProductResponse> listAll(Pageable pageable);
     ProductResponse update(UUID id, UpdateProductRequest request);
     void delete(UUID id);
+    void permanentDelete(UUID id);
 }

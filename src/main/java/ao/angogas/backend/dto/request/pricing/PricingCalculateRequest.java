@@ -14,8 +14,7 @@ public class PricingCalculateRequest {
     /**
      * Multi-produto: lista de itens (tem prioridade sobre os campos legacy abaixo).
      */
-    @Valid
-    private List<PricingItemRequest> items;
+    private List<@Valid PricingItemRequest> items;
 
     // ── Campos legacy (compatibilidade com clientes mais antigos) ────────
 

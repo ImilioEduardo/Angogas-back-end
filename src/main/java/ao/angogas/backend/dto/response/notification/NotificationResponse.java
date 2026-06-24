@@ -14,5 +14,7 @@ public class NotificationResponse {
     private String mensagem;
     private String tipo;
     private boolean lida;
+    private UUID entityId;
+    private String route;
     private OffsetDateTime criadoEm;
 }

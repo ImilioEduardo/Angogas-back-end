@@ -14,4 +14,6 @@ public interface UserService {
     PageResponse<UserResponse> listAll(Pageable pageable);
     UserResponse getById(UUID id);
     void deactivate(UUID id);
+    void triggerVerificationEmail(UUID userId);
+    UserResponse verifyEmail(String token);
 }

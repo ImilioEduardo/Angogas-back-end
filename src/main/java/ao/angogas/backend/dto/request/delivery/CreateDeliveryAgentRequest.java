@@ -59,4 +59,9 @@ public class CreateDeliveryAgentRequest {
 
     // Equipamento
     private boolean temSmartphone = true;
+
+    // Foto de perfil — obrigatória para entregadores
+    @NotBlank(message = "A foto de perfil é obrigatória para entregadores")
+    @Size(max = 500)
+    private String fotoPerfil;
 }

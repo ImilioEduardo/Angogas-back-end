@@ -77,7 +77,9 @@ public class ReviewServiceImpl implements ReviewService {
                 order.getEntregador().getId(),
                 "Nova avaliação recebida",
                 currentUser.getNome() + " avaliou a tua entrega com " + request.getNota() + " estrelas",
-                NotificationType.AVALIACAO
+                NotificationType.AVALIACAO,
+                order.getId(),
+                "/historico"
         );
 
         return toResponse(review);

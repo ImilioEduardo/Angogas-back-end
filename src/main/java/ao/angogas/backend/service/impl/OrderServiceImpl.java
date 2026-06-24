@@ -146,7 +146,9 @@ public class OrderServiceImpl implements OrderService {
                     "Novo pedido na tua zona",
                     "Pedido #" + order.getId().toString().substring(0, 8).toUpperCase()
                             + " em " + zone.getNome() + ". Aceita ou recusa.",
-                    NotificationType.PEDIDO
+                    NotificationType.PEDIDO,
+                    order.getId(),
+                    "/entregas"
             );
         }
     }
@@ -278,7 +280,9 @@ public class OrderServiceImpl implements OrderService {
                 "Pedido aceite!",
                 "O teu pedido #" + id.toString().substring(0, 8).toUpperCase()
                         + " foi aceite por " + entregador.getNome() + " e está a ser preparado.",
-                NotificationType.ENTREGA
+                NotificationType.ENTREGA,
+                id,
+                "/rastrear/" + id
         );
 
         return orderMapper.toResponse(saved);

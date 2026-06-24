@@ -1,6 +1,5 @@
 package ao.angogas.backend.model;
 
-import ao.angogas.backend.model.enums.NotificationType;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -9,13 +8,13 @@ import java.time.OffsetDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "notifications")
+@Table(name = "email_verification_tokens")
 @Getter
 @Setter
-@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class Notification {
+@Builder
+public class EmailVerificationToken {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -25,25 +24,15 @@ public class Notification {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @Column(nullable = false, length = 100)
-    private String titulo;
+    @Column(nullable = false, unique = true)
+    private String token;
 
-    @Column(nullable = false, columnDefinition = "TEXT")
-    private String mensagem;
-
-    @Enumerated(EnumType.STRING)
-    @Column(length = 30)
-    private NotificationType tipo;
+    @Column(name = "expira_em", nullable = false)
+    private OffsetDateTime expiraEm;
 
     @Column(nullable = false)
     @Builder.Default
-    private boolean lida = false;
-
-    @Column(name = "entity_id")
-    private UUID entityId;
-
-    @Column(length = 255)
-    private String route;
+    private boolean usado = false;
 
     @CreationTimestamp
     @Column(name = "criado_em", updatable = false)

@@ -4,9 +4,11 @@ import ao.angogas.backend.dto.request.product.CreateProductRequest;
 import ao.angogas.backend.dto.request.product.UpdateProductRequest;
 import ao.angogas.backend.dto.response.PageResponse;
 import ao.angogas.backend.dto.response.product.ProductResponse;
+import ao.angogas.backend.exception.BusinessException;
 import ao.angogas.backend.exception.ResourceNotFoundException;
 import ao.angogas.backend.mapper.ProductMapper;
 import ao.angogas.backend.model.Product;
+import ao.angogas.backend.repository.OrderItemRepository;
 import ao.angogas.backend.repository.ProductRepository;
 import ao.angogas.backend.service.ProductService;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +23,7 @@ import java.util.UUID;
 public class ProductServiceImpl implements ProductService {
 
     private final ProductRepository productRepository;
+    private final OrderItemRepository orderItemRepository;
     private final ProductMapper productMapper;
 
     @Override
@@ -69,5 +72,20 @@ public class ProductServiceImpl implements ProductService {
                 .orElseThrow(() -> new ResourceNotFoundException("Produto não encontrado"));
         product.setActivo(false);
         productRepository.save(product);
+    }
+
+    @Override
+    @Transactional
+    public void permanentDelete(UUID id) {
+        if (!productRepository.existsById(id)) {
+            throw new ResourceNotFoundException("Produto não encontrado");
+        }
+        if (orderItemRepository.existsByProductId(id)) {
+            throw new BusinessException(
+                "Não é possível apagar este produto porque está associado a pedidos existentes. " +
+                "Desactive-o em vez de o apagar."
+            );
+        }
+        productRepository.deleteById(id);
     }
 }

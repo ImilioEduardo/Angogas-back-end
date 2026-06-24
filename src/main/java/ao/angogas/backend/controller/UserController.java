@@ -39,6 +39,19 @@ public class UserController {
         return ResponseEntity.ok(ApiResponse.ok(userService.update(currentUser.getId(), request)));
     }
 
+    @GetMapping("/users/verify-email")
+    @Operation(summary = "Verificar email com token")
+    public ResponseEntity<ApiResponse<?>> verifyEmail(@RequestParam String token) {
+        return ResponseEntity.ok(ApiResponse.ok(userService.verifyEmail(token), "Email verificado com sucesso"));
+    }
+
+    @PostMapping("/users/me/resend-verification")
+    @Operation(summary = "Reenviar email de verificação")
+    public ResponseEntity<ApiResponse<?>> resendVerification(@AuthenticationPrincipal User currentUser) {
+        userService.triggerVerificationEmail(currentUser.getId());
+        return ResponseEntity.ok(ApiResponse.ok(null, "Email de verificação reenviado"));
+    }
+
     // --- Admin ---
 
     @GetMapping("/admin/users")

@@ -1,0 +1,3 @@
+ALTER TABLE notifications
+    ADD COLUMN IF NOT EXISTS entity_id UUID,
+    ADD COLUMN IF NOT EXISTS route     VARCHAR(255);

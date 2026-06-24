@@ -16,6 +16,7 @@ public class DeliveryAgentResponse {
     private String nome;
     private String email;
     private String telefone;
+    private String fotoPerfil;
 
     // Documentação pessoal
     private LocalDate dataNascimento;

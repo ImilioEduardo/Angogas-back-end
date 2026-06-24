@@ -60,10 +60,18 @@ public class ProductController {
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    @Operation(summary = "[Admin] Desactivar produto")
+    @Operation(summary = "[Admin] Desactivar produto (soft delete)")
     public ResponseEntity<ApiResponse<?>> delete(@PathVariable UUID id) {
         productService.delete(id);
         return ResponseEntity.ok(ApiResponse.ok(null, "Produto desactivado"));
+    }
+
+    @DeleteMapping("/{id}/permanent")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "[Admin] Apagar produto permanentemente")
+    public ResponseEntity<ApiResponse<?>> permanentDelete(@PathVariable UUID id) {
+        productService.permanentDelete(id);
+        return ResponseEntity.ok(ApiResponse.ok(null, "Produto apagado permanentemente"));
     }
 
     @GetMapping("/admin/all")

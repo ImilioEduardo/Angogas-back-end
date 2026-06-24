@@ -147,7 +147,9 @@ public class DeliveryAgentServiceImpl implements DeliveryAgentService {
                 order.getCliente().getId(),
                 "Actualização do teu pedido",
                 "O teu pedido está agora: " + request.getStatus().name(),
-                NotificationType.ENTREGA
+                NotificationType.ENTREGA,
+                order.getId(),
+                "/rastrear/" + order.getId()
         );
 
         return orderMapper.toResponse(saved);
@@ -219,6 +221,7 @@ public class DeliveryAgentServiceImpl implements DeliveryAgentService {
                 .telefone(request.getTelefone())
                 .passwordHash(passwordEncoder.encode(request.getPassword()))
                 .role(UserRole.ENTREGADOR)
+                .fotoPerfil(request.getFotoPerfil())
                 .build();
         user = userRepository.save(user);
 
@@ -362,6 +365,7 @@ public class DeliveryAgentServiceImpl implements DeliveryAgentService {
                 .userId(agent.getUser().getId())
                 .nome(agent.getUser().getNome())
                 .telefone(agent.getUser().getTelefone())
+                .fotoPerfil(agent.getUser().getFotoPerfil())
                 .veiculo(agent.getVeiculo())
                 .matricula(agent.getMatricula())
                 .avaliacaoMedia(agent.getAvaliacaoMedia())
@@ -376,6 +380,7 @@ public class DeliveryAgentServiceImpl implements DeliveryAgentService {
                 .nome(agent.getUser().getNome())
                 .email(agent.getUser().getEmail())
                 .telefone(agent.getUser().getTelefone())
+                .fotoPerfil(agent.getUser().getFotoPerfil())
                 .dataNascimento(agent.getDataNascimento())
                 .biNumero(agent.getBiNumero())
                 .cartaConducao(agent.getCartaConducao())

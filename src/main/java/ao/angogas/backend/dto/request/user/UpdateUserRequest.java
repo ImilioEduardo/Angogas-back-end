@@ -17,4 +17,7 @@ public class UpdateUserRequest {
 
     @Size(min = 9, max = 20, message = "Telefone inválido")
     private String telefone;
+
+    @Size(max = 500)
+    private String fotoPerfil;
 }

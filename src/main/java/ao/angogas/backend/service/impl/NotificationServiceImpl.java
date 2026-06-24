@@ -62,7 +62,7 @@ public class NotificationServiceImpl implements NotificationService {
 
     @Override
     @Transactional
-    public void send(UUID userId, String titulo, String mensagem, NotificationType tipo) {
+    public void send(UUID userId, String titulo, String mensagem, NotificationType tipo, UUID entityId, String route) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Utilizador não encontrado"));
 
@@ -71,6 +71,8 @@ public class NotificationServiceImpl implements NotificationService {
                 .titulo(titulo)
                 .mensagem(mensagem)
                 .tipo(tipo)
+                .entityId(entityId)
+                .route(route)
                 .build();
         notificationRepository.save(notification);
 
@@ -84,6 +86,8 @@ public class NotificationServiceImpl implements NotificationService {
                 .mensagem(n.getMensagem())
                 .tipo(n.getTipo() != null ? n.getTipo().name() : null)
                 .lida(n.isLida())
+                .entityId(n.getEntityId())
+                .route(n.getRoute())
                 .criadoEm(n.getCriadoEm())
                 .build();
     }
