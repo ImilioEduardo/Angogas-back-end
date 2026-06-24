@@ -15,6 +15,8 @@ public interface OrderMapper {
     @Mapping(target = "clienteTelefone", source = "cliente.telefone")
     @Mapping(target = "entregadorId", source = "entregador.id")
     @Mapping(target = "entregadorNome", source = "entregador.nome")
+    @Mapping(target = "entregadorTelefone", source = "entregador.telefone")
+    @Mapping(target = "entregadorFotoPerfil", source = "entregador.fotoPerfil")
     @Mapping(target = "address", source = "address")
     @Mapping(target = "zoneId", source = "zone.id")
     @Mapping(target = "zoneNome", source = "zone.nome")

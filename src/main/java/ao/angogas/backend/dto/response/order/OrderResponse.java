@@ -20,6 +20,8 @@ public class OrderResponse {
     private String clienteTelefone;
     private UUID entregadorId;
     private String entregadorNome;
+    private String entregadorTelefone;
+    private String entregadorFotoPerfil;
     private AddressResponse address;
     private UUID zoneId;
     private String zoneNome;
