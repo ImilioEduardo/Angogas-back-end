@@ -22,6 +22,7 @@ public class OrderResponse {
     private String entregadorNome;
     private String entregadorTelefone;
     private String entregadorFotoPerfil;
+    private OffsetDateTime aceitoEm;
     private AddressResponse address;
     private UUID zoneId;
     private String zoneNome;

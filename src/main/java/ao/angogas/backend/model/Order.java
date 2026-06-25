@@ -68,6 +68,9 @@ public class Order {
     @Builder.Default
     private List<OrderItem> items = new ArrayList<>();
 
+    @Column(name = "aceito_em")
+    private OffsetDateTime aceitoEm;
+
     @CreationTimestamp
     @Column(name = "criado_em", updatable = false)
     private OffsetDateTime criadoEm;

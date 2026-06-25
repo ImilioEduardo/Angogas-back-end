@@ -273,6 +273,7 @@ public class OrderServiceImpl implements OrderService {
 
         order.setEntregador(entregador);
         order.setStatus(OrderStatus.CONFIRMADO);
+        order.setAceitoEm(java.time.OffsetDateTime.now());
         Order saved = orderRepository.save(order);
 
         notificationService.send(
